@@ -55,20 +55,6 @@ func (mr *MockRepositoryMockRecorder) CloseBilling(ctx, billing any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseBilling", reflect.TypeOf((*MockRepository)(nil).CloseBilling), ctx, billing)
 }
 
-// DeleteBill mocks base method.
-func (m *MockRepository) DeleteBill(ctx context.Context, billingID string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteBill", ctx, billingID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteBill indicates an expected call of DeleteBill.
-func (mr *MockRepositoryMockRecorder) DeleteBill(ctx, billingID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteBill", reflect.TypeOf((*MockRepository)(nil).DeleteBill), ctx, billingID)
-}
-
 // DeleteExchange mocks base method.
 func (m *MockRepository) DeleteExchange(ctx context.Context, exchangeID int64) error {
 	m.ctrl.T.Helper()
@@ -142,6 +128,20 @@ func (mr *MockRepositoryMockRecorder) GetItemsByBillID(ctx, billID any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetItemsByBillID", reflect.TypeOf((*MockRepository)(nil).GetItemsByBillID), ctx, billID)
 }
 
+// RevertBillClosing mocks base method.
+func (m *MockRepository) RevertBillClosing(ctx context.Context, billingID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RevertBillClosing", ctx, billingID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RevertBillClosing indicates an expected call of RevertBillClosing.
+func (mr *MockRepositoryMockRecorder) RevertBillClosing(ctx, billingID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevertBillClosing", reflect.TypeOf((*MockRepository)(nil).RevertBillClosing), ctx, billingID)
+}
+
 // SaveBill mocks base method.
 func (m *MockRepository) SaveBill(ctx context.Context, bill *domain.Bill) error {
 	m.ctrl.T.Helper()
@@ -182,20 +182,6 @@ func (m *MockRepository) SaveItem(ctx context.Context, item *domain.Item) error 
 func (mr *MockRepositoryMockRecorder) SaveItem(ctx, item any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveItem", reflect.TypeOf((*MockRepository)(nil).SaveItem), ctx, item)
-}
-
-// UpdateBill mocks base method.
-func (m *MockRepository) UpdateBill(ctx context.Context, bill *domain.Bill) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateBill", ctx, bill)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateBill indicates an expected call of UpdateBill.
-func (mr *MockRepositoryMockRecorder) UpdateBill(ctx, bill any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBill", reflect.TypeOf((*MockRepository)(nil).UpdateBill), ctx, bill)
 }
 
 // UpdateExchange mocks base method.

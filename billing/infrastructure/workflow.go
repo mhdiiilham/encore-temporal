@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"encore.app/billing/domain"
+	"encore.app/billing/usecases"
 	"encore.dev/rlog"
-	"github.com/mitchellh/mapstructure"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -50,7 +50,7 @@ func (w *Workflows) BillingWorkflow(ctx workflow.Context, state *domain.Bill) er
 
 	itemQueue := make([]domain.Item, 0)
 	closeRequested := false
-	var currencyExchangeReq domain.BillExchange
+	var closeBillingRequest usecases.CloseBillRequest
 
 	for {
 		if state.Status == domain.BillStatusClosed {
@@ -61,33 +61,21 @@ func (w *Workflows) BillingWorkflow(ctx workflow.Context, state *domain.Bill) er
 		selector := workflow.NewSelector(ctx)
 
 		selector.AddReceive(addItemLineCh, func(c workflow.ReceiveChannel, _ bool) {
-			var signal any
-			c.Receive(ctx, &signal)
-
-			var message domain.Item
-			if err := mapstructure.Decode(signal, &message); err != nil {
-				rlog.Error("invalid signal type", "err", err)
-				return
-			}
+			var toBeAddedItem domain.Item
+			c.Receive(ctx, &toBeAddedItem)
 
 			if state.Status == domain.BillStatusClosed {
-				rlog.Warn("attempted to add item to closed bill", "workflow_id", state.BillingID, "item", message.Name)
+				rlog.Warn("attempted to add item to closed bill", "workflow_id", state.BillingID, "item", toBeAddedItem.Name)
 				return
 			}
 
 			rlog.Info("received line item signal", "workflow_id", state.BillingID)
-			itemQueue = append(itemQueue, message)
+			itemQueue = append(itemQueue, toBeAddedItem)
 		})
 
 		selector.AddReceive(closeBillCh, func(c workflow.ReceiveChannel, _ bool) {
-			var signal any
-			c.Receive(ctx, &signal)
-
-			var message domain.BillExchange
-			if err := mapstructure.Decode(signal, &message); err != nil {
-				rlog.Error("invalid signal type", "err", err)
-				return
-			}
+			var message usecases.CloseBillRequest
+			c.Receive(ctx, &message)
 
 			if state.Status == domain.BillStatusClosed {
 				rlog.Warn("attempted to close already closed bill", "workflow_id", state.BillingID)
@@ -95,7 +83,7 @@ func (w *Workflows) BillingWorkflow(ctx workflow.Context, state *domain.Bill) er
 			}
 
 			closeRequested = true
-			currencyExchangeReq = message
+			closeBillingRequest = message
 		})
 
 		selector.Select(ctx)
@@ -111,20 +99,24 @@ func (w *Workflows) BillingWorkflow(ctx workflow.Context, state *domain.Bill) er
 		itemQueue = itemQueue[:0]
 
 		if closeRequested {
-			closedAt := workflow.Now(ctx)
-			state.Conversion = currencyExchangeReq
-			state.Close(closedAt)
+			state.Conversion = closeBillingRequest.Exchange
+			state.Close(closeBillingRequest.ClosedAt)
 
 			err := workflow.ExecuteActivity(ctx, w.billingActivies.SetBillingToCloseActivity, state).Get(ctx, nil)
 			if err != nil {
 				rlog.Error("failed to set billing to close", "err", err, "bill", state)
-				return err
+				state.Conversion = domain.BillExchange{}
+				state.Status = domain.BillStatusOpen
+				continue
 			}
 
 			if state.Conversion.TargetCurrency != "" {
 				if err := workflow.ExecuteActivity(ctx, w.billingActivies.InsertBillExchangeActivity, state).Get(ctx, nil); err != nil {
 					rlog.Error("failed to set conversion", "err", err, "bill", state, "currency", state.Conversion.TargetCurrency)
-					return err
+					state.Conversion = domain.BillExchange{}
+					state.Status = domain.BillStatusOpen
+					_ = workflow.ExecuteActivity(ctx, w.billingActivies.RevertBillCloseActivity, state)
+					continue
 				}
 			}
 

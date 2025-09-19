@@ -78,33 +78,18 @@ func (r *repository) SaveBill(ctx context.Context, bill *domain.Bill) error {
 	return nil
 }
 
-func (r *repository) UpdateBill(ctx context.Context, bill *domain.Bill) error {
+func (r *repository) RevertBillClosing(ctx context.Context, billingID string) error {
 	const q = `
 	UPDATE bills
-	SET status = $2, currency = $3, total = $4, closed_at = $5
+		SET status = 'OPEN',
+			closed_at = null
 	WHERE billing_id = $1
 	`
 
-	_, err := r.db.Exec(ctx, q,
-		bill.BillingID,
-		bill.Status,
-		bill.Currency,
-		bill.Total,
-		bill.ClosedAt,
-	)
+	_, err := r.db.Exec(ctx, q, billingID)
 
 	if err != nil {
 		return fmt.Errorf("failed to update bill: %w", err)
-	}
-	return nil
-}
-
-func (r *repository) DeleteBill(ctx context.Context, billingID string) error {
-	const q = `DELETE FROM bills WHERE billing_id = $1`
-
-	_, err := r.db.Exec(ctx, q, billingID)
-	if err != nil {
-		return fmt.Errorf("failed to delete bill: %w", err)
 	}
 	return nil
 }

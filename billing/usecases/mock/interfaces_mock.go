@@ -43,11 +43,12 @@ func (m *MockBillingUseCase) EXPECT() *MockBillingUseCaseMockRecorder {
 }
 
 // AddItem mocks base method.
-func (m *MockBillingUseCase) AddItem(ctx context.Context, req usecases.AddItemRequest) error {
+func (m *MockBillingUseCase) AddItem(ctx context.Context, req usecases.AddItemRequest) (domain.Bill, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddItem", ctx, req)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(domain.Bill)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddItem indicates an expected call of AddItem.

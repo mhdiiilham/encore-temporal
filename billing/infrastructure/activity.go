@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"encore.app/billing/domain"
+	"encore.dev/rlog"
 )
 
 // BillingActivities defines the set of Temporal activities related to billing.
@@ -83,4 +84,11 @@ func (a *BillingActivities) InsertBillExchangeActivity(ctx context.Context, bill
 	}
 
 	return nil
+}
+
+// RevertBillCloseActivity is to handle revert bill closing
+func (a *BillingActivities) RevertBillCloseActivity(ctx context.Context, bill domain.Bill) error {
+	rlog.Info("BillingActivities.RevertBillCloseActivity", "billing-id", bill.BillingID)
+
+	return a.repository.RevertBillClosing(ctx, bill.BillingID)
 }

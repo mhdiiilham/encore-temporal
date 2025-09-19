@@ -1,9 +1,9 @@
-package convertion_test
+package conversion_test
 
 import (
 	"testing"
 
-	"encore.app/pkg/convertion"
+	"encore.app/pkg/conversion"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,7 +62,7 @@ func TestConvertAmount(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			amount, rate, err := convertion.ConvertAmount(tt.amount, tt.baseCurrency, tt.targetCurrency)
+			amount, rate, err := conversion.ConvertAmount(tt.amount, tt.baseCurrency, tt.targetCurrency)
 
 			if tt.expectError {
 				assert.Error(t, err)

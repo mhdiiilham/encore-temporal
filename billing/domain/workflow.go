@@ -9,4 +9,5 @@ type BillingActivities interface {
 	UpsertBillingToDBActivity(ctx context.Context, bill Bill) error
 	InsertLineItemActivity(ctx context.Context, item Item) error
 	InsertBillExchangeActivity(ctx context.Context, bill Bill) error
+	RevertBillCloseActivity(ctx context.Context, bill Bill) error
 }

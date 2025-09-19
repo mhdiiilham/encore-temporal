@@ -10,9 +10,8 @@ type Repository interface {
 	// Bill operations
 	GetBill(ctx context.Context, billingID string) (Bill, error)
 	SaveBill(ctx context.Context, bill *Bill) error
-	UpdateBill(ctx context.Context, bill *Bill) error
-	DeleteBill(ctx context.Context, billingID string) error
 	CloseBilling(ctx context.Context, billing Bill) error
+	RevertBillClosing(ctx context.Context, billingID string) error
 
 	// Item operations
 	SaveItem(ctx context.Context, item *Item) error

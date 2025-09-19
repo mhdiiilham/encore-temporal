@@ -3,27 +3,33 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"encore.app/billing/domain"
-	"encore.app/pkg/convertion"
-	"github.com/google/uuid"
+	"encore.app/pkg/clock"
+	"encore.app/pkg/conversion"
+	"encore.app/pkg/generator"
 )
 
 // billingUseCase implements BillingUseCase interface
 type billingUseCase struct {
 	repo           domain.Repository
 	workflowClient WorkflowClient
+	idGenerator    generator.IDProvider
+	clock          clock.Clock
 }
 
 // NewBillingUseCase creates a new billing use case
 func NewBillingUseCase(
 	repo domain.Repository,
 	workflowClient WorkflowClient,
+	idGenerator generator.IDProvider,
+	clock clock.Clock,
 ) BillingUseCase {
 	return &billingUseCase{
 		repo:           repo,
 		workflowClient: workflowClient,
+		idGenerator:    idGenerator,
+		clock:          clock,
 	}
 }
 
@@ -33,13 +39,14 @@ func (u *billingUseCase) CreateBill(ctx context.Context, req CreateBillRequest) 
 		return "", err
 	}
 
+	billingID := u.idGenerator.GenerateBillingID("Bill")
 	bill := &domain.Bill{
-		BillingID: uuid.New().String(),
+		BillingID: billingID,
 		Status:    domain.BillStatusOpen,
 		Currency:  domain.Currency(req.Currency),
 		Total:     0,
 		Items:     []domain.Item{},
-		CreatedAt: time.Now(),
+		CreatedAt: u.clock.Now(),
 	}
 
 	if err := u.workflowClient.StartWorkflow(ctx, bill.BillingID, bill); err != nil {
@@ -69,32 +76,35 @@ func (u *billingUseCase) GetBill(ctx context.Context, billingID string) (domain.
 }
 
 // AddItem adds an item to a bill
-func (u *billingUseCase) AddItem(ctx context.Context, req AddItemRequest) error {
+func (u *billingUseCase) AddItem(ctx context.Context, req AddItemRequest) (domain.Bill, error) {
 	if err := u.validateAddItemRequest(req); err != nil {
-		return err
+		return domain.Bill{}, err
 	}
 
 	bill, err := u.GetBill(ctx, req.BillingID)
 	if err != nil {
-		return err
+		return domain.Bill{}, err
 	}
 
 	if bill.IsClosed() {
-		return domain.ErrBillClosed
+		return domain.Bill{}, domain.ErrBillClosed
 	}
 
-	item := &domain.Item{
+	idempotencyKey := u.idGenerator.GenerateIdempotencyKey("idem", PayloadToBytes(req))
+	item := domain.Item{
 		BillingID:      req.BillingID,
 		Name:           req.Name,
 		Price:          req.Price,
-		IdempotencyKey: uuid.New().String(),
+		IdempotencyKey: idempotencyKey,
 	}
+	bill.Items = append(bill.Items, item)
+	bill.Total = bill.GetTotal()
 
 	if err := u.workflowClient.SignalWorkflow(ctx, req.BillingID, domain.SignalAddLineItem, item); err != nil {
-		return fmt.Errorf("failed to add item: %w", err)
+		return domain.Bill{}, fmt.Errorf("failed to add item: %w", err)
 	}
 
-	return nil
+	return bill, nil
 }
 
 // CloseBill closes a bill
@@ -112,12 +122,11 @@ func (u *billingUseCase) CloseBill(ctx context.Context, req CloseBillRequest) (d
 		return domain.Bill{}, domain.ErrBillClosed
 	}
 
-	if req.Currency != "" {
-		converted, rate, err := convertion.ConvertAmount(bill.Total, string(bill.Currency), req.Currency)
-		if err != nil {
-			return domain.Bill{}, domain.ErrFailedToConvertBill
-		}
+	closedAt := u.clock.Now()
+	req.ClosedAt = closedAt
 
+	if req.Currency != "" {
+		converted, rate, _ := conversion.ConvertAmount(bill.Total, string(bill.Currency), req.Currency)
 		bill.Conversion = domain.BillExchange{
 			BillID:         bill.BillingID,
 			BaseCurrency:   bill.Currency,
@@ -125,13 +134,15 @@ func (u *billingUseCase) CloseBill(ctx context.Context, req CloseBillRequest) (d
 			Rate:           rate,
 			Total:          converted,
 		}
+
+		req.Exchange = bill.Conversion
 	}
 
-	if err := u.workflowClient.SignalWorkflow(ctx, req.BillingID, domain.SignalCloseBill, bill.Conversion); err != nil {
+	if err := u.workflowClient.SignalWorkflow(ctx, req.BillingID, domain.SignalCloseBill, req); err != nil {
 		return domain.Bill{}, fmt.Errorf("failed to close bill: %w", err)
 	}
 
-	bill.Close(time.Now())
+	bill.Close(closedAt)
 	return bill, nil
 }
 

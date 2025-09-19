@@ -24,7 +24,7 @@ type (
 	// AddItemResponse represents the response after attempting to add a line item,
 	// indicating whether the operation was successful.
 	AddItemResponse struct {
-		Success bool `json:"success"`
+		CurrentBill Bill `json:"current_bill"`
 	}
 
 	// CloseBillingRequest represents the payload to request closing a bill,
@@ -71,7 +71,7 @@ type Bill struct {
 	Items          []Item              `json:"items"`
 	Conversion     BillExchangeResonse `json:"conversion"`
 	CreatedAt      time.Time           `json:"createdAt"`
-	ClosedAt       time.Time           `json:"closedAt"`
+	ClosedAt       *time.Time          `json:"closedAt"`
 	FormattedTotal string              `json:"formattedTotal"`
 }
 
@@ -89,6 +89,8 @@ func fromDomainBillToBillReponse(b domain.Bill) Bill {
 		Items:          items,
 		Conversion:     fromDomainBillingExchangeToResponse(b.Conversion),
 		FormattedTotal: currency.FormatString(string(b.Currency), b.GetTotal()),
+		CreatedAt:      b.CreatedAt,
+		ClosedAt:       b.ClosedAt,
 	}
 }
 

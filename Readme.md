@@ -10,15 +10,6 @@ This service uses:
 - **PostgreSQL** - Persistent data storage
 - **Go** - Programming language
 
-### Key Features
-
-- ✅ **Durable Workflows** - Bills are managed through Temporal workflows
-- ✅ **Real-time Operations** - Add items and close bills with immediate consistency
-- ✅ **Currency Conversion** - Support for USD ↔ GEL conversion
-- ✅ **Idempotent Operations** - Safe to retry operations
-- ✅ **Comprehensive Testing** - Full test suite with mocks
-- ✅ **Error Handling** - Graceful handling of closed bills and edge cases
-
 ## 📋 Prerequisites
 
 Before running this service, ensure you have:
@@ -81,7 +72,18 @@ The service will be available at:
 
 ### 5. Start the Worker
 
-Worker automatically running.
+Worker for temporal are initialized at `billing/service.go` inside the `initService` function.
+The `initService` function is part of Encore and will run automatically.
+
+### 6. Generate API Spec (OpenAPI)
+
+You can generate the OpenAPI specification for the billing APIs with:
+
+```bash
+encore gen client -e local -l OpenAPI -o APISpec.yaml
+```
+
+This will produce a YAML file (APISpec.yaml) containing the full API definitions, ready for documentation or client generation.
 
 ## 🔧 Configuration
 
@@ -100,101 +102,14 @@ The service connects to Temporal using default settings:
 - **Namespace**: `default`
 - **Task Queue**: `billing-task-queue`
 
-## 📚 API Documentation
-
-### Endpoints
-
-#### 1. Create a New Bill
-
-```http
-POST /api/v1/bills
-Content-Type: application/json
-
-{
-  "currency": "USD"
-}
-```
-
-**Response:**
-```json
-{
-  "billingId": "550e8400-e29b-41d4-a716-446655440000",
-  "currency": "USD"
-}
-```
-
-#### 2. Get Bill Details
-
-```http
-GET /api/v1/bills/{billingId}
-```
-
-**Response:**
-```json
-{
-  "success": {
-    "id": 1,
-    "billingId": "550e8400-e29b-41d4-a716-446655440000",
-    "status": "OPEN",
-    "currency": "USD",
-    "total": 0,
-    "items": [],
-    "conversion": {},
-    "createdAt": "2024-01-15T10:30:00Z",
-    "closedAt": "0001-01-01T00:00:00Z"
-  }
-}
-```
-
-#### 3. Add Item to Bill
-
-```http
-POST /api/v1/bills/{billingId}/items
-Content-Type: application/json
-
-{
-  "name": "Coffee",
-  "price": 500
-}
-```
-
-**Response:**
-```json
-{
-  "success": true
-}
-```
-
-#### 4. Close Bill
-
-```http
-POST /api/v1/bills/{billingId}
-Content-Type: application/json
-
-{
-  "currency": "GEL"
-}
-```
-
-**Response:**
-```json
-{
-  "originalCurrencyTotal": {
-    "currency": "USD",
-    "amount": 1700
-  },
-  "convertedCurrencyTotal": {
-    "currency": "GEL",
-    "amount": 4726
-  }
-}
-```
-
 ## 🧪 Testing
 
 ### Run All Tests
 
 ```bash
+# Prepare mocks
+./scripts/prepare_mock.sh
+
 # Run the test script
 encore test ./... -cover -v
 ```
