@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"encore.app/billing/domain"
 	"encore.app/billing/infrastructure"
 	"encore.app/billing/usecases"
+	"encore.app/pkg/clock"
 	"encore.app/pkg/currency"
+	"encore.app/pkg/generator"
 	"encore.dev/beta/errs"
 	"encore.dev/rlog"
 	"go.temporal.io/sdk/client"
@@ -31,12 +34,15 @@ func initService() (*Service, error) {
 		return nil, err
 	}
 
+	idGenerator := generator.NewIDGenerator(time.Now().UnixNano())
+	clock := clock.RealClock{}
+
 	repository := infrastructure.NewRepository(billingdb)
 	billingActivities := infrastructure.NewBillingActivity(repository)
 	workflows := infrastructure.NewTemporalWorkflows(billingActivities)
 
 	temporalClient := infrastructure.NewTemporalWorkflowClient(c, workflows)
-	billingUseCase := usecases.NewBillingUseCase(repository, temporalClient)
+	billingUseCase := usecases.NewBillingUseCase(repository, temporalClient, idGenerator, clock)
 
 	rlog.Info("starting temporal worker")
 	w := worker.New(c, domain.TemporalQueueName, worker.Options{})

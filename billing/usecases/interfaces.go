@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"encoding/json"
 
 	"encore.app/billing/domain"
 )
@@ -40,4 +41,11 @@ type AddItemRequest struct {
 type CloseBillRequest struct {
 	BillingID string `json:"billingId" validate:"required,uuid"`
 	Currency  string `json:"currency" validate:"required,oneof=USD GEL"`
+}
+
+// PayloadToBytes convert request argument `r` to []byte
+// to generate idempotency key.
+func PayloadToBytes(r any) []byte {
+	b, _ := json.Marshal(r)
+	return b
 }

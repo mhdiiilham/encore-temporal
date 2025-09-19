@@ -3,27 +3,33 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"encore.app/billing/domain"
+	"encore.app/pkg/clock"
 	"encore.app/pkg/convertion"
-	"github.com/google/uuid"
+	"encore.app/pkg/generator"
 )
 
 // billingUseCase implements BillingUseCase interface
 type billingUseCase struct {
 	repo           domain.Repository
 	workflowClient WorkflowClient
+	idGenerator    generator.IDProvider
+	clock          clock.Clock
 }
 
 // NewBillingUseCase creates a new billing use case
 func NewBillingUseCase(
 	repo domain.Repository,
 	workflowClient WorkflowClient,
+	idGenerator generator.IDProvider,
+	clock clock.Clock,
 ) BillingUseCase {
 	return &billingUseCase{
 		repo:           repo,
 		workflowClient: workflowClient,
+		idGenerator:    idGenerator,
+		clock:          clock,
 	}
 }
 
@@ -33,13 +39,14 @@ func (u *billingUseCase) CreateBill(ctx context.Context, req CreateBillRequest) 
 		return "", err
 	}
 
+	billingID := u.idGenerator.GenerateBillingID("Bill")
 	bill := &domain.Bill{
-		BillingID: uuid.New().String(),
+		BillingID: billingID,
 		Status:    domain.BillStatusOpen,
 		Currency:  domain.Currency(req.Currency),
 		Total:     0,
 		Items:     []domain.Item{},
-		CreatedAt: time.Now(),
+		CreatedAt: u.clock.Now(),
 	}
 
 	if err := u.workflowClient.StartWorkflow(ctx, bill.BillingID, bill); err != nil {
@@ -83,11 +90,12 @@ func (u *billingUseCase) AddItem(ctx context.Context, req AddItemRequest) error 
 		return domain.ErrBillClosed
 	}
 
+	idempotencyKey := u.idGenerator.GenerateIdempotencyKey("idem", PayloadToBytes(req))
 	item := &domain.Item{
 		BillingID:      req.BillingID,
 		Name:           req.Name,
 		Price:          req.Price,
-		IdempotencyKey: uuid.New().String(),
+		IdempotencyKey: idempotencyKey,
 	}
 
 	if err := u.workflowClient.SignalWorkflow(ctx, req.BillingID, domain.SignalAddLineItem, item); err != nil {
@@ -131,7 +139,8 @@ func (u *billingUseCase) CloseBill(ctx context.Context, req CloseBillRequest) (d
 		return domain.Bill{}, fmt.Errorf("failed to close bill: %w", err)
 	}
 
-	bill.Close(time.Now())
+	closedAt := u.clock.Now()
+	bill.Close(closedAt)
 	return bill, nil
 }
 

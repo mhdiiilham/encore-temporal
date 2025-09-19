@@ -195,6 +195,9 @@ Content-Type: application/json
 ### Run All Tests
 
 ```bash
+# Prepare mocks
+./scripts/prepare_mock.sh
+
 # Run the test script
 encore test ./... -cover -v
 ```
