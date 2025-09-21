@@ -9,10 +9,14 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+// Workflows defines a set of Temporal workflows that orchestrate
+// and coordinate billing-related activities.
 type Workflows struct {
 	billingActivies domain.BillingActivities
 }
 
+// NewTemporalWorkflows creates and returns a new Workflows instance
+// configured with the given BillingActivities.
 func NewTemporalWorkflows(billingActivities domain.BillingActivities) *Workflows {
 	return &Workflows{
 		billingActivies: billingActivities,

@@ -148,30 +148,6 @@ func (r *repository) GetItemsByBillID(ctx context.Context, billID string) ([]dom
 	return items, nil
 }
 
-func (r *repository) UpdateItem(ctx context.Context, item *domain.Item) error {
-	const q = `
-	UPDATE bill_items
-	SET name = $2, price = $3
-	WHERE id = $1
-	`
-
-	_, err := r.db.Exec(ctx, q, item.ID, item.Name, item.Price)
-	if err != nil {
-		return fmt.Errorf("failed to update item: %w", err)
-	}
-	return nil
-}
-
-func (r *repository) DeleteItem(ctx context.Context, itemID int64) error {
-	const q = `DELETE FROM bill_items WHERE id = $1`
-
-	_, err := r.db.Exec(ctx, q, itemID)
-	if err != nil {
-		return fmt.Errorf("failed to delete item: %w", err)
-	}
-	return nil
-}
-
 func (r *repository) SaveExchange(ctx context.Context, bill *domain.Bill) error {
 	const q = `
 	INSERT INTO bill_exchanges (bill_id, base_currency, target_currency, rate, total)
@@ -214,37 +190,6 @@ func (r *repository) GetExchangeByBillID(ctx context.Context, billID string) (do
 		return domain.BillExchange{}, fmt.Errorf("failed to get exchange: %w", err)
 	}
 	return exchange, nil
-}
-
-func (r *repository) UpdateExchange(ctx context.Context, exchange *domain.BillExchange) error {
-	const q = `
-	UPDATE bill_exchanges
-	SET base_currency = $2, target_currency = $3, rate = $4, total = $5
-	WHERE id = $1
-	`
-
-	_, err := r.db.Exec(ctx, q,
-		exchange.ID,
-		exchange.BaseCurrency,
-		exchange.TargetCurrency,
-		exchange.Rate,
-		exchange.Total,
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to update exchange: %w", err)
-	}
-	return nil
-}
-
-func (r *repository) DeleteExchange(ctx context.Context, exchangeID int64) error {
-	const q = `DELETE FROM bill_exchanges WHERE id = $1`
-
-	_, err := r.db.Exec(ctx, q, exchangeID)
-	if err != nil {
-		return fmt.Errorf("failed to delete exchange: %w", err)
-	}
-	return nil
 }
 
 func (r *repository) CloseBilling(ctx context.Context, billing domain.Bill) error {

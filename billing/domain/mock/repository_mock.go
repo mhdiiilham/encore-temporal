@@ -55,34 +55,6 @@ func (mr *MockRepositoryMockRecorder) CloseBilling(ctx, billing any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseBilling", reflect.TypeOf((*MockRepository)(nil).CloseBilling), ctx, billing)
 }
 
-// DeleteExchange mocks base method.
-func (m *MockRepository) DeleteExchange(ctx context.Context, exchangeID int64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteExchange", ctx, exchangeID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteExchange indicates an expected call of DeleteExchange.
-func (mr *MockRepositoryMockRecorder) DeleteExchange(ctx, exchangeID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExchange", reflect.TypeOf((*MockRepository)(nil).DeleteExchange), ctx, exchangeID)
-}
-
-// DeleteItem mocks base method.
-func (m *MockRepository) DeleteItem(ctx context.Context, itemID int64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteItem", ctx, itemID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteItem indicates an expected call of DeleteItem.
-func (mr *MockRepositoryMockRecorder) DeleteItem(ctx, itemID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteItem", reflect.TypeOf((*MockRepository)(nil).DeleteItem), ctx, itemID)
-}
-
 // GetBill mocks base method.
 func (m *MockRepository) GetBill(ctx context.Context, billingID string) (domain.Bill, error) {
 	m.ctrl.T.Helper()
@@ -182,32 +154,4 @@ func (m *MockRepository) SaveItem(ctx context.Context, item *domain.Item) error 
 func (mr *MockRepositoryMockRecorder) SaveItem(ctx, item any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveItem", reflect.TypeOf((*MockRepository)(nil).SaveItem), ctx, item)
-}
-
-// UpdateExchange mocks base method.
-func (m *MockRepository) UpdateExchange(ctx context.Context, exchange *domain.BillExchange) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateExchange", ctx, exchange)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateExchange indicates an expected call of UpdateExchange.
-func (mr *MockRepositoryMockRecorder) UpdateExchange(ctx, exchange any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateExchange", reflect.TypeOf((*MockRepository)(nil).UpdateExchange), ctx, exchange)
-}
-
-// UpdateItem mocks base method.
-func (m *MockRepository) UpdateItem(ctx context.Context, item *domain.Item) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateItem", ctx, item)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateItem indicates an expected call of UpdateItem.
-func (mr *MockRepositoryMockRecorder) UpdateItem(ctx, item any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateItem", reflect.TypeOf((*MockRepository)(nil).UpdateItem), ctx, item)
 }

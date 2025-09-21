@@ -16,12 +16,8 @@ type Repository interface {
 	// Item operations
 	SaveItem(ctx context.Context, item *Item) error
 	GetItemsByBillID(ctx context.Context, billID string) ([]Item, error)
-	UpdateItem(ctx context.Context, item *Item) error
-	DeleteItem(ctx context.Context, itemID int64) error
 
 	// Exchange operations
 	SaveExchange(ctx context.Context, bill *Bill) error
 	GetExchangeByBillID(ctx context.Context, billID string) (BillExchange, error)
-	UpdateExchange(ctx context.Context, exchange *BillExchange) error
-	DeleteExchange(ctx context.Context, exchangeID int64) error
 }
