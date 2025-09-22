@@ -12,6 +12,7 @@ import (
 	"encore.app/pkg/clock"
 	"encore.app/pkg/currency"
 	"encore.app/pkg/generator"
+	"encore.app/pkg/temporalclient"
 	"encore.dev/beta/errs"
 	"encore.dev/rlog"
 	"go.temporal.io/sdk/client"
@@ -29,7 +30,7 @@ type Service struct {
 }
 
 func initService() (*Service, error) {
-	c, err := client.Dial(client.Options{})
+	c, err := temporalclient.GetTemporalClient(client.Options{})
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +59,6 @@ func initService() (*Service, error) {
 	}
 
 	rlog.Info("success running temporal workder")
-
 	return &Service{
 		useCase: billingUseCase,
 		worker:  w,

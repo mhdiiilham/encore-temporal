@@ -61,8 +61,8 @@ func (w *Workflows) BillingWorkflow(ctx workflow.Context, state *domain.Bill) er
 	addItemLineCh := workflow.GetSignalChannel(ctx, domain.SignalAddLineItem)
 	closeBillCh := workflow.GetSignalChannel(ctx, domain.SignalCloseBill)
 
-	itemQueue := make([]domain.Item, 0)
 	closeRequested := false
+	var itemQueue []domain.Item
 	var closeBillingRequest usecases.CloseBillRequest
 
 	for {
